@@ -49,7 +49,7 @@ def volume(args):
 
     elif args.state[0] == '-':
         vol = get_volume(args)
-        vol = vol - int(args.state.strip('+'))
+        vol = vol - int(args.state.strip('-'))
         set_volume(vol, args)
 
     elif int(args.state[0]) in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
