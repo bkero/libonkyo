@@ -124,8 +124,14 @@ def send_command(port, baud, command):
     return response
 
 
+def usage(args):
+    print("Usage: command.py {power, volume, mute, input} --help")
+    sys.exit(1)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Control an Onkyo receiver')
+    parser.set_defaults(func=usage)
 
     # Global optional arguments
 
