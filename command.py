@@ -96,7 +96,7 @@ def r_input(args):
         if cur_input == 'SLI03':
             print('Current input: PC (Aux1)')
         if cur_input == 'SLI04':
-            print('Current input: Aux2')
+            print('Current input: Linux (Aux2)')
 
     if (args.state.lower() == 'wii' or
        args.state.lower() == 'vcr' or
@@ -111,7 +111,8 @@ def r_input(args):
             send_command(args.port, args.baud, 'SLI02')
     elif args.state.lower() == 'pc':
             send_command(args.port, args.baud, 'SLI03')
-    elif args.state.lower() == 'aux2':
+    elif (args.state.lower() == 'linux' or
+          args.state.lower() == 'aux2'):
             send_command(args.port, args.baud, 'SLI04')
 
 
