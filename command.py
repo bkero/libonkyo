@@ -1,11 +1,15 @@
 #!/usr/bin/env python
+"""Script to control my Onkyo TX-SR805 receiver"""
 
-import serial
+from __future__ import print_function
 import argparse
 import sys
+import serial
 
 
 def power(args):
+    """Toggles the power state, or simply reports status"""
+
     if args.state == 'on':
         send_command(args.port, args.baud, 'PWR01')
     elif args.state == 'off':
@@ -25,6 +29,8 @@ def power(args):
 
 
 def get_volume(args):
+    """Retrieves the current volume from the receiver"""
+
     response = send_command(args.port, args.baud, 'MVLQSTN')
     hex_vol = response.decode('ascii').replace('!1MVL', '').replace('\x1a', '')
     dec_vol = int(hex_vol, 16)
@@ -33,12 +39,16 @@ def get_volume(args):
 
 
 def set_volume(vol, args):
+
+    """Sets the volume on the receiver, format is hex"""
     vol = int(vol / 100 * 92)
     vol = format(vol, '02x').upper()
     send_command(args.port, args.baud, "MVL%s" % vol)
 
 
 def volume(args):
+
+    """Higher level function to get and set volume levels"""
     if args.state == 'status':
         print("Volume: %s" % get_volume(args))
 
@@ -52,7 +62,7 @@ def volume(args):
         vol = vol - int(args.state.strip('-'))
         set_volume(vol, args)
 
-    elif int(args.state[0]) in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
+    elif int(args.state[0]) in range(0, 10):
         vol = int(args.state)
         if vol < 0 or vol > 100:
             print("Invalid volume: %s" % args.state)
@@ -64,6 +74,8 @@ def volume(args):
 
 
 def mute(args):
+    """Handles getting and setting mute state on the receiver"""
+
     if args.state == 'mute' or args.state == 'on':
         send_command(args.port, args.baud, 'AMT01')
         print('Mute: On (muted)')
@@ -82,6 +94,8 @@ def mute(args):
 
 
 def r_input(args):
+    """Gets or sets the active input on the receiver"""
+
     if args.state == 'status':
         cur_input = send_command(args.port, args.baud, 'SLIQSTN')
         cur_input = cur_input.decode('ascii')
@@ -98,25 +112,28 @@ def r_input(args):
         if cur_input == 'SLI04':
             print('Current input: Linux (Aux2)')
 
-    if (args.state.lower() == 'wii' or
-       args.state.lower() == 'vcr' or
-       args.state.lower() == 'dvr' or
-       args.state.lower() == 'vcr/dvr'):
+    state = args.state.lower()
+    if (
+            state == 'wii' or
+            state == 'vcr' or
+            state == 'dvr' or
+            state == 'vcr/dvr'):  # Blame E129
         send_command(args.port, args.baud, 'SLI00')
-    elif args.state.lower() == 'cable':
-            send_command(args.port, args.baud, 'SLI01')
-    elif (args.state.lower() == 'xbox' or
-          args.state.lower() == 'xbox360' or
-          args.state.lower() == '360'):
-            send_command(args.port, args.baud, 'SLI02')
-    elif args.state.lower() == 'pc':
-            send_command(args.port, args.baud, 'SLI03')
-    elif (args.state.lower() == 'linux' or
-          args.state.lower() == 'aux2'):
-            send_command(args.port, args.baud, 'SLI04')
+    elif state == 'cable':
+        send_command(args.port, args.baud, 'SLI01')
+    elif (state == 'xbox' or
+          state == 'xbox360' or
+          state == '360'):
+        send_command(args.port, args.baud, 'SLI02')
+    elif state == 'pc':
+        send_command(args.port, args.baud, 'SLI03')
+    elif (state == 'linux' or
+          state == 'aux2'):
+        send_command(args.port, args.baud, 'SLI04')
 
 
 def send_command(port, baud, command):
+    """Format a command correctly, then send it out over the serial port"""
     compiled_command = "".join(['!1', command, '\r'])
     ser = serial.Serial(port, baud, timeout=1)
     ser.write(bytearray(compiled_command, 'ascii'))
@@ -125,12 +142,16 @@ def send_command(port, baud, command):
     return response
 
 
-def usage(args):
+def usage():
+    """Print the usage message and exit"""
+
     print("Usage: command.py {power, volume, mute, input} --help")
     sys.exit(1)
 
 
-if __name__ == '__main__':
+def main():
+    """Main method, parses arguments, calls methods to service request"""
+
     parser = argparse.ArgumentParser(description='Control an Onkyo receiver')
     parser.set_defaults(func=usage)
 
@@ -178,9 +199,13 @@ if __name__ == '__main__':
                               help='change or query the input')
     parser_input.set_defaults(func=r_input)
 
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    if args.debug:
-        print(args)
+    if arguments.debug:
+        print(arguments)
 
-    args.func(args)
+    arguments.func(arguments)
+
+
+if __name__ == "__main__":
+    main()
